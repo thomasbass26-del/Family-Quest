@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Family Quest</title>
+<link rel="manifest" id="manifest-placeholder">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f0c29">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    min-height: 100vh; min-height: 100dvh;
+    background: linear-gradient(160deg, #0f0c29 0%, #1a1a3e 40%, #24243e 100%);
+    font-family: 'Nunito', 'Segoe UI', sans-serif;
+    color: #e8e8f0; overflow-x: hidden;
+  }
+  button { font-family: inherit; cursor: pointer; }
+
+  /* Loading */
+  .loading-screen {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+  }
+  .loading-screen h1 {
+    font-family: 'Fredoka One', cursive; font-size: 28px;
+    background: linear-gradient(135deg, #2D9CDB, #9B59B6);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 16px;
+  }
+  .spinner { width:32px;height:32px;border:3px solid rgba(255,255,255,0.1);border-top-color:#9B59B6;border-radius:50%;animation:spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Profile Select */
+  .profile-screen {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 40px 20px; text-align: center;
+  }
+  .profile-screen h1 {
+    font-family: 'Fredoka One', cursive; font-size: 32px;
+    background: linear-gradient(135deg, #2D9CDB, #9B59B6);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px;
+  }
+  .profile-screen .sub { font-size: 14px; opacity: 0.5; margin-bottom: 40px; }
+  .profile-cards { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+  .profile-card {
+    background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.08);
+    border-radius: 20px; padding: 32px 28px; width: 150px; text-align: center;
+    cursor: pointer; transition: all 0.3s;
+  }
+  .profile-card:hover { transform: scale(1.05); border-color: rgba(255,255,255,0.2); }
+  .profile-card .avatar { font-size: 48px; margin-bottom: 12px; }
+  .profile-card .pname { font-family: 'Fredoka One', cursive; font-size: 18px; }
+  .profile-card.cooper { border-color: rgba(45,156,219,0.3); }
+  .profile-card.cooper:hover { border-color: #2D9CDB; background: rgba(45,156,219,0.1); }
+  .profile-card.haylee { border-color: rgba(236,112,160,0.3); }
+  .profile-card.haylee:hover { border-color: #EC70A0; background: rgba(236,112,160,0.1); }
+  .profile-card.parent { border-color: rgba(155,89,182,0.3); }
+  .profile-card.parent:hover { border-color: #9B59B6; background: rgba(155,89,182,0.1); }
+
+  /* PIN */
+  .pin-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+    display: flex; align-items: center; justify-content: center; z-index: 200; padding: 20px;
+  }
+  .pin-box {
+    background: linear-gradient(160deg, #1a1a3e, #24243e); border-radius: 20px;
+    padding: 32px 28px; max-width: 320px; width: 100%; text-align: center;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .pin-box h2 { font-family: 'Fredoka One', cursive; font-size: 22px; margin-bottom: 8px; }
+  .pin-box p { font-size: 13px; opacity: 0.5; margin-bottom: 20px; }
+  .pin-dots { display: flex; gap: 12px; justify-content: center; margin-bottom: 24px; }
+  .pin-dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); transition: all 0.2s; }
+  .pin-dot.filled { background: #9B59B6; border-color: #9B59B6; }
+  .pin-dot.error { background: #E74C3C; border-color: #E74C3C; }
+  .pin-pad { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; max-width: 240px; margin: 0 auto; }
+  .pin-key {
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px; color: #e8e8f0; font-size: 22px; font-weight: 700; padding: 14px; text-align: center;
+  }
+  .pin-key:active { background: rgba(255,255,255,0.15); }
+  .pin-key.empty { visibility: hidden; }
+  .pin-cancel { margin-top: 16px; background: none; border: none; color: rgba(255,255,255,0.4); font-size: 14px; padding: 8px; }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, rgba(45,156,219,0.15), rgba(155,89,182,0.15));
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 16px 20px 14px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .header h1 {
+    font-family: 'Fredoka One', cursive; font-size: 22px;
+    background: linear-gradient(135deg, #2D9CDB, #9B59B6);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .header .who { font-size: 12px; opacity: 0.5; margin-top: 2px; }
+  .header-btns { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .header-btn {
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px; color: #e8e8f0; padding: 7px 11px; font-size: 12px;
+  }
+  .header-btn.active { background: rgba(45,156,219,0.2); border-color: rgba(45,156,219,0.4); color: #2D9CDB; }
+  .main { padding: 20px 20px 100px; max-width: 480px; margin: 0 auto; }
+
+  /* Balance Card */
+  .balance-card {
+    background: linear-gradient(145deg, rgba(45,156,219,0.12), rgba(155,89,182,0.12));
+    border-radius: 20px; padding: 28px 20px; text-align: center;
+    border: 1px solid rgba(255,255,255,0.06); margin-bottom: 24px;
+    position: relative; overflow: hidden;
+  }
+  .balance-card .glow {
+    position: absolute; top: -40px; right: -40px; width: 120px; height: 120px;
+    background: radial-gradient(circle, rgba(45,156,219,0.15), transparent 70%); border-radius: 50%;
+  }
+  .ring-wrap { position: relative; display: inline-block; margin-bottom: 12px; }
+  .ring-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+  .ring-center .amount { font-family: 'Fredoka One', cursive; font-size: 36px; line-height: 1; color: #fff; }
+  .ring-center .label { font-size: 11px; opacity: 0.5; margin-top: 4px; }
+  .next-reward { font-size: 14px; opacity: 0.6; margin-bottom: 16px; }
+  .next-reward strong { opacity: 1; }
+  .redeem-btn {
+    background: linear-gradient(135deg, #27AE60, #2ECC71); border: none; border-radius: 12px; color: #fff;
+    padding: 12px 28px; font-size: 15px; font-weight: 700; box-shadow: 0 4px 15px rgba(39,174,96,0.3);
+  }
+  .pending-tag {
+    display: inline-block; background: rgba(242,153,74,0.15); border: 1px solid rgba(242,153,74,0.3);
+    border-radius: 8px; padding: 4px 12px; font-size: 12px; color: #F2994A; font-weight: 600; margin-top: 10px;
+  }
+
+  /* Today Tags */
+  .today-section { margin-bottom: 24px; }
+  .today-section h3 { font-size: 14px; font-weight: 700; opacity: 0.5; margin: 0 0 10px 4px; text-transform: uppercase; letter-spacing: 1px; }
+  .today-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .today-tag { border-radius: 8px; padding: 5px 10px; font-size: 12px; font-weight: 600; }
+
+  /* Cats & Tasks */
+  .cat-tabs { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+  .cat-tab { border-radius: 10px; padding: 8px 14px; font-size: 13px; white-space: nowrap; transition: all 0.2s; }
+  .task-list { display: flex; flex-direction: column; gap: 8px; }
+  .task-btn {
+    display: flex; align-items: center; justify-content: space-between;
+    border-radius: 14px; padding: 14px 16px; text-align: left; width: 100%; transition: all 0.3s;
+  }
+  .task-btn .left { display: flex; align-items: center; gap: 12px; }
+  .task-btn .icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .task-btn .name { font-size: 15px; font-weight: 600; }
+  .task-btn .mins { font-size: 14px; font-weight: 800; font-family: 'Fredoka One', cursive; }
+
+  /* Calendar */
+  .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .cal-header h3 { font-family: 'Fredoka One', cursive; font-size: 18px; }
+  .cal-arrow {
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px; color: #e8e8f0; width: 36px; height: 36px; font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-day-label { text-align: center; font-size: 11px; font-weight: 700; opacity: 0.35; text-transform: uppercase; padding: 4px 0 8px; }
+  .cal-cell {
+    aspect-ratio: 1; border-radius: 10px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; font-size: 14px; font-weight: 700;
+    position: relative; transition: all 0.2s; border: 1.5px solid transparent; cursor: default;
+  }
+  .cal-cell.empty { opacity: 0; pointer-events: none; }
+  .cal-cell.no-data { opacity: 0.25; }
+  .cal-cell.has-data { background: rgba(39,174,96,0.15); border-color: rgba(39,174,96,0.25); cursor: pointer; }
+  .cal-cell.has-data:hover { background: rgba(39,174,96,0.25); border-color: rgba(39,174,96,0.4); transform: scale(1.08); }
+  .cal-cell.is-today { border-color: rgba(45,156,219,0.5); box-shadow: 0 0 8px rgba(45,156,219,0.2); }
+  .cal-cell.selected { border-color: #9B59B6 !important; background: rgba(155,89,182,0.2) !important; }
+  .cal-mins { font-size: 8px; font-family: 'Fredoka One', cursive; color: #27AE60; position: absolute; bottom: 4px; }
+  .day-detail {
+    background: linear-gradient(145deg, rgba(155,89,182,0.1), rgba(45,156,219,0.1));
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px; margin-top: 16px;
+  }
+  .day-detail h4 { font-family: 'Fredoka One', cursive; font-size: 16px; margin-bottom: 4px; }
+  .day-detail .day-total { font-size: 13px; opacity: 0.5; margin-bottom: 14px; }
+  .day-detail .day-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; }
+  .day-detail .day-item:last-child { border-bottom: none; }
+  .day-detail .earned { font-weight: 700; color: #27AE60; }
+  .day-detail .redeemed-item { font-weight: 700; color: #E74C3C; }
+  .day-detail .time { font-size: 11px; opacity: 0.4; margin-left: 8px; }
+
+  /* Parent */
+  .parent-section { margin-bottom: 28px; }
+  .parent-section h3 { font-family: 'Fredoka One', cursive; font-size: 18px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .kid-summary {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px; padding: 18px; margin-bottom: 12px;
+  }
+  .kid-summary .ks-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .kid-summary .ks-name { font-family: 'Fredoka One', cursive; font-size: 17px; }
+  .kid-summary .ks-balance { font-family: 'Fredoka One', cursive; font-size: 20px; color: #27AE60; }
+  .kid-summary .ks-stats { font-size: 13px; opacity: 0.5; }
+  .pending-item {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+    background: rgba(242,153,74,0.08); border: 1px solid rgba(242,153,74,0.2);
+    border-radius: 12px; padding: 14px 16px; margin-bottom: 8px;
+  }
+  .pending-item .pi-info { flex: 1; min-width: 120px; }
+  .pending-item .pi-kid { font-size: 12px; opacity: 0.5; }
+  .pending-item .pi-label { font-size: 15px; font-weight: 600; }
+  .pending-item .pi-cost { font-size: 13px; color: #F2994A; font-weight: 700; }
+  .pending-item .pi-actions { display: flex; gap: 8px; }
+  .pi-approve {
+    background: rgba(39,174,96,0.2); border: 1px solid rgba(39,174,96,0.4);
+    border-radius: 8px; color: #27AE60; padding: 6px 14px; font-size: 13px; font-weight: 700;
+  }
+  .pi-deny {
+    background: rgba(231,76,60,0.2); border: 1px solid rgba(231,76,60,0.4);
+    border-radius: 8px; color: #E74C3C; padding: 6px 14px; font-size: 13px; font-weight: 700;
+  }
+  .no-pending { text-align: center; opacity: 0.4; font-size: 14px; padding: 16px 0; }
+  .pkt-btn {
+    flex: 1; padding: 10px; border-radius: 10px; text-align: center; font-size: 14px; font-weight: 700;
+    background: rgba(255,255,255,0.04); border: 1.5px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.5);
+  }
+  .pkt-btn.active { border-color: rgba(155,89,182,0.5); color: #9B59B6; background: rgba(155,89,182,0.1); }
+
+  /* Modals */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px;
+  }
+  .modal {
+    background: linear-gradient(160deg, #1a1a3e, #24243e); border-radius: 20px; padding: 28px 24px;
+    max-width: 400px; width: 100%; border: 1px solid rgba(255,255,255,0.1);
+    max-height: 85vh; overflow-y: auto;
+  }
+  .modal h2 { font-family: 'Fredoka One', cursive; font-size: 22px; margin: 0 0 6px; text-align: center; }
+  .modal .subtitle { text-align: center; font-size: 14px; opacity: 0.5; margin: 0 0 20px; }
+  .modal-list { display: flex; flex-direction: column; gap: 8px; }
+  .reward-btn {
+    display: flex; align-items: center; justify-content: space-between;
+    border-radius: 12px; padding: 14px 16px; width: 100%; text-align: left; font-size: 15px; font-weight: 600;
+  }
+  .modal-close {
+    margin-top: 16px; width: 100%; padding: 12px; background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #e8e8f0; font-size: 14px;
+  }
+
+  .sync-dot {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px;
+    background: #27AE60; box-shadow: 0 0 6px rgba(39,174,96,0.5);
+  }
+  .sync-dot.offline { background: #E74C3C; box-shadow: 0 0 6px rgba(231,76,60,0.5); }
+
+  .hidden { display: none !important; }
+  @media (hover: hover) {
+    .task-btn:not(:disabled):hover { transform: scale(1.02); }
+    .header-btn:hover { background: rgba(255,255,255,0.12); }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="screen-loading" class="loading-screen">
+  <h1>Family Quest</h1>
+  <div class="spinner"></div>
+</div>
+
+<!-- PROFILE SELECT -->
+<div id="screen-profiles" class="profile-screen hidden">
+  <h1>Family Quest</h1>
+  <p class="sub">Who's checking in?</p>
+  <div class="profile-cards">
+    <div class="profile-card cooper" onclick="selectProfile('cooper')">
+      <div class="avatar">🎮</div>
+      <div class="pname">Cooper</div>
+    </div>
+    <div class="profile-card haylee" onclick="selectProfile('haylee')">
+      <div class="avatar">⭐</div>
+      <div class="pname">Haylee</div>
+    </div>
+    <div class="profile-card parent" onclick="selectProfile('parent')">
+      <div class="avatar">🔒</div>
+      <div class="pname">Dad</div>
+    </div>
+  </div>
+</div>
+
+<!-- PIN -->
+<div id="pin-overlay" class="pin-overlay hidden">
+  <div class="pin-box">
+    <h2>🔒 Parent Access</h2>
+    <p id="pin-prompt">Enter your 4-digit PIN</p>
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+    </div>
+    <div class="pin-pad" id="pin-pad"></div>
+    <button class="pin-cancel" onclick="cancelPin()">Cancel</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="screen-app" class="hidden">
+  <div class="header">
+    <div>
+      <h1 id="app-title">Family Quest</h1>
+      <div class="who" id="app-who"><span class="sync-dot" id="sync-dot"></span><span id="sync-label">Synced</span></div>
+    </div>
+    <div class="header-btns">
+      <button class="header-btn active" id="btn-tracker" onclick="showTab('tracker')">🎯 Tasks</button>
+      <button class="header-btn" id="btn-calendar" onclick="showTab('calendar')">📅 History</button>
+      <button class="header-btn" id="btn-newday" onclick="resetDay()">🌅 New Day</button>
+      <button class="header-btn" onclick="logout()">👤 Switch</button>
+    </div>
+  </div>
+  <div class="main">
+    <!-- KID TRACKER -->
+    <div id="view-tracker">
+      <div class="balance-card">
+        <div class="glow"></div>
+        <div class="ring-wrap">
+          <svg width="180" height="180" style="transform:rotate(-90deg)">
+            <circle cx="90" cy="90" r="76" fill="none" stroke="#1a1a2e" stroke-width="14" opacity="0.15"/>
+            <circle id="ring-progress" cx="90" cy="90" r="76" fill="none" stroke="#2D9CDB" stroke-width="14"
+              stroke-dasharray="477.52" stroke-dashoffset="477.52" stroke-linecap="round"
+              style="transition: stroke-dashoffset 0.6s cubic-bezier(.4,0,.2,1)"/>
+          </svg>
+          <div class="ring-center">
+            <div class="amount" id="total-display">0m</div>
+            <div class="label">earned</div>
+          </div>
+        </div>
+        <div class="next-reward" id="next-reward-text"></div>
+        <button class="redeem-btn hidden" id="redeem-btn" onclick="openRedeem()">🎁 Redeem</button>
+        <div id="pending-count"></div>
+      </div>
+      <div class="today-section hidden" id="today-section">
+        <h3>Today's Wins</h3>
+        <div class="today-tags" id="today-tags"></div>
+      </div>
+      <div class="cat-tabs" id="cat-tabs"></div>
+      <div class="task-list" id="task-list"></div>
+    </div>
+    <!-- KID CALENDAR -->
+    <div id="view-calendar" class="hidden">
+      <div class="cal-header">
+        <button class="cal-arrow" onclick="calPrev()">‹</button>
+        <h3 id="cal-month-label"></h3>
+        <button class="cal-arrow" onclick="calNext()">›</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div id="day-detail-wrap"></div>
+    </div>
+    <!-- PARENT DASHBOARD -->
+    <div id="view-parent" class="hidden">
+      <div class="parent-section">
+        <h3>⏳ Pending Redemptions</h3>
+        <div id="pending-list"></div>
+      </div>
+      <div class="parent-section">
+        <h3>📊 Overview</h3>
+        <div id="parent-summaries"></div>
+      </div>
+      <div class="parent-section">
+        <h3>📅 View History</h3>
+        <div style="display:flex;gap:8px;margin-bottom:16px" id="parent-kid-toggle"></div>
+        <div class="cal-header">
+          <button class="cal-arrow" onclick="pCalPrev()">‹</button>
+          <h3 id="pcal-month-label"></h3>
+          <button class="cal-arrow" onclick="pCalNext()">›</button>
+        </div>
+        <div class="cal-grid" id="pcal-grid"></div>
+        <div id="pday-detail-wrap"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Redeem Modal -->
+<div class="modal-overlay hidden" id="redeem-modal" onclick="closeRedeem()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h2>🎁 Choose a Reward</h2>
+    <p class="subtitle" id="redeem-balance"></p>
+    <div class="modal-list" id="reward-list"></div>
+    <button class="modal-close" onclick="closeRedeem()">Keep Saving</button>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+// ===== FIREBASE INIT =====
+firebase.initializeApp({
+  apiKey: "AIzaSyCNr1cvubgKvDpnWw5Vj_hpssb6IqqKsxo",
+  authDomain: "family-quest-ea3fd.firebaseapp.com",
+  projectId: "family-quest-ea3fd",
+  storageBucket: "family-quest-ea3fd.firebasestorage.app",
+  messagingSenderId: "722774012262",
+  appId: "1:722774012262:web:2be0d9cead93a8569a18a7"
+});
+const db = firebase.firestore();
+try { db.enablePersistence({ synchronizeTabs: true }).catch(()=>{}); } catch(e) {}
+
+// ===== CONSTANTS =====
+const KIDS_META = {
+  cooper: { name: "Cooper", emoji: "🎮", color: "#2D9CDB" },
+  haylee: { name: "Haylee", emoji: "⭐", color: "#EC70A0" }
+};
+
+const CATEGORIES = {
+  chores: { label:"Chores", emoji:"🧹", color:"#2D9CDB", items:[
+    {id:"make-bed",label:"Make bed",minutes:10},{id:"clean-room",label:"Clean room",minutes:15},
+    {id:"dishes",label:"Help with dishes",minutes:10},{id:"laundry",label:"Put away laundry",minutes:10},
+    {id:"take-trash",label:"Take out trash",minutes:5},{id:"feed-pet",label:"Feed pet / help with pet",minutes:5},
+    {id:"vacuum",label:"Vacuum a room",minutes:15}
+  ]},
+  school: { label:"School & Learning", emoji:"📚", color:"#27AE60", items:[
+    {id:"homework-done",label:"Homework completed",minutes:20},{id:"good-school-day",label:"Good report from school",minutes:30},
+    {id:"reading-20",label:"Read for 20 minutes",minutes:15},{id:"reading-30",label:"Read for 30 minutes",minutes:25},
+    {id:"practice-skill",label:"Practice a skill (math, writing)",minutes:15}
+  ]},
+  outside: { label:"Outside & Active", emoji:"☀️", color:"#F2994A", items:[
+    {id:"outside-30",label:"Play outside 30 min",minutes:15},{id:"outside-60",label:"Play outside 1 hour",minutes:30},
+    {id:"bike-ride",label:"Bike ride",minutes:20},{id:"sports-practice",label:"Sports / practice",minutes:25},
+    {id:"walk-dog",label:"Walk the dog",minutes:10},{id:"family-activity",label:"Family outdoor activity",minutes:20}
+  ]},
+  bonus: { label:"Bonus & Character", emoji:"⭐", color:"#9B59B6", items:[
+    {id:"kind-act",label:"Act of kindness",minutes:10},{id:"no-reminders",label:"Did chores without reminders",minutes:10},
+    {id:"helped-sibling",label:"Helped sibling without being asked",minutes:15},{id:"good-attitude",label:"Great attitude all day",minutes:15},
+    {id:"tried-hard",label:"Tried something difficult",minutes:10},{id:"apologized",label:"Owned a mistake & apologized",minutes:10}
+  ]}
+};
+
+const MILESTONES = [
+  {minutes:30,label:"Quick Game",emoji:"🎮"},{minutes:30,label:"$1.00",emoji:"💵"},
+  {minutes:60,label:"1 Hour Screen Time",emoji:"📱"},{minutes:60,label:"$2.00",emoji:"💵"},
+  {minutes:90,label:"Movie Night Pick",emoji:"🍿"},{minutes:90,label:"$3.00",emoji:"💵"},
+  {minutes:120,label:"2 Hour Gaming Session",emoji:"🕹️"},{minutes:120,label:"$5.00",emoji:"💰"},
+  {minutes:180,label:"Friend Sleepover + Games",emoji:"🏆"},{minutes:180,label:"$7.00",emoji:"💰"},
+  {minutes:250,label:"New Game or App",emoji:"🌟"},{minutes:250,label:"$10.00",emoji:"💰"}
+];
+
+const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const DAY_LABELS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+// ===== STATE =====
+let kidData = { cooper: null, haylee: null };
+let configData = { parentPin: null };
+let currentProfile = null;
+let activeCategory = "chores";
+let currentTab = "tracker";
+let calYear, calMonth, selectedDateKey = null;
+let pCalYear, pCalMonth, pSelectedDateKey = null, parentViewKid = "cooper";
+let pinBuffer = "";
+let unsubscribers = [];
+
+const n = new Date();
+calYear = n.getFullYear(); calMonth = n.getMonth();
+pCalYear = n.getFullYear(); pCalMonth = n.getMonth();
+
+function todayKey() { const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function dateToKey(y,m,d) { return y+"-"+String(m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0"); }
+function keyToDisplay(k) { if(k===todayKey()) return "Today"; const p=k.split("-"); return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}); }
+function fmtMin(m) { if(m<60) return m+"m"; const h=Math.floor(m/60),r=m%60; return r>0?h+"h "+r+"m":h+"h"; }
+
+function defaultKidDoc() {
+  return { totalMinutes:0, completedToday:[], dailyLog:{}, redeemLog:{}, pendingRedemptions:[], lastDate:todayKey(), streakDays:0 };
+}
+
+// ===== FIREBASE SYNC =====
+
+function startListening() {
+  // Ensure docs exist first
+  db.collection("kids").doc("cooper").get().then(snap => {
+    if (!snap.exists) db.collection("kids").doc("cooper").set(defaultKidDoc());
+  }).catch(()=>{});
+  db.collection("kids").doc("haylee").get().then(snap => {
+    if (!snap.exists) db.collection("kids").doc("haylee").set(defaultKidDoc());
+  }).catch(()=>{});
+  db.collection("config").doc("settings").get().then(snap => {
+    if (!snap.exists) db.collection("config").doc("settings").set({ parentPin: null });
+  }).catch(()=>{});
+
+  // Listen to both kids + config
+  unsubscribers.push(
+    db.collection("kids").doc("cooper").onSnapshot(snap => {
+      kidData.cooper = snap.exists ? snap.data() : defaultKidDoc();
+      if (!kidData.cooper.pendingRedemptions) kidData.cooper.pendingRedemptions = [];
+      if (!kidData.cooper.dailyLog) kidData.cooper.dailyLog = {};
+      if (!kidData.cooper.redeemLog) kidData.cooper.redeemLog = {};
+      if (!kidData.cooper.completedToday) kidData.cooper.completedToday = [];
+      checkNewDayRemote("cooper");
+      onDataUpdate();
+    }, err => { console.error("Cooper listener error:", err); setSyncStatus(false); }),
+    db.collection("kids").doc("haylee").onSnapshot(snap => {
+      kidData.haylee = snap.exists ? snap.data() : defaultKidDoc();
+      if (!kidData.haylee.pendingRedemptions) kidData.haylee.pendingRedemptions = [];
+      if (!kidData.haylee.dailyLog) kidData.haylee.dailyLog = {};
+      if (!kidData.haylee.redeemLog) kidData.haylee.redeemLog = {};
+      if (!kidData.haylee.completedToday) kidData.haylee.completedToday = [];
+      checkNewDayRemote("haylee");
+      onDataUpdate();
+    }, err => { console.error("Haylee listener error:", err); setSyncStatus(false); }),
+    db.collection("config").doc("settings").onSnapshot(snap => {
+      if (snap.exists) configData = snap.data();
+      else configData = { parentPin: null };
+      onDataUpdate();
+    }, err => { console.error("Config listener error:", err); setSyncStatus(false); })
+  );
+
+  // Fallback: if Firebase never responds in 5s, show profiles anyway
+  setTimeout(() => {
+    document.getElementById("screen-loading").classList.add("hidden");
+    if (!currentProfile) document.getElementById("screen-profiles").classList.remove("hidden");
+  }, 5000);
+}
+
+function saveKid(kid) {
+  const d = kidData[kid];
+  db.collection("kids").doc(kid).set(d, {merge:true}).catch(e => console.error("Save error:", e));
+  setSyncStatus(true);
+}
+
+function saveConfig() {
+  db.collection("config").doc("settings").set(configData, {merge:true}).catch(e => console.error("Config save error:", e));
+}
+
+function checkNewDayRemote(kid) {
+  const kd = kidData[kid];
+  if (!kd || !kd.lastDate || kd.lastDate === todayKey()) return;
+  if (kd.completedToday && kd.completedToday.length > 0) {
+    kd.streakDays = (kd.streakDays || 0) + 1;
+    if (!kd.dailyLog) kd.dailyLog = {};
+    if (!kd.dailyLog[kd.lastDate]) kd.dailyLog[kd.lastDate] = kd.completedToday.slice();
+  }
+  kd.completedToday = [];
+  kd.lastDate = todayKey();
+  saveKid(kid);
+}
+
+function setSyncStatus(online) {
+  const dot = document.getElementById("sync-dot");
+  const label = document.getElementById("sync-label");
+  if (dot) dot.className = "sync-dot" + (online ? "" : " offline");
+  if (label) label.textContent = online ? "Synced" : "Offline";
+}
+
+let loaded = { cooper: false, haylee: false, config: false };
+function onDataUpdate() {
+  if (kidData.cooper) loaded.cooper = true;
+  if (kidData.haylee) loaded.haylee = true;
+  loaded.config = true;
+
+  if (loaded.cooper && loaded.haylee && loaded.config) {
+    document.getElementById("screen-loading").classList.add("hidden");
+    if (!currentProfile) document.getElementById("screen-profiles").classList.remove("hidden");
+    setSyncStatus(true);
+  }
+
+  // Only re-render if we're actually in the app
+  if (!currentProfile) return;
+  try {
+    if (currentProfile === "parent") renderParentDashboard();
+    else if (currentTab === "tracker") renderTracker();
+    else if (currentTab === "calendar") renderCalendar();
+  } catch(e) { console.error("Render error:", e); }
+}
+
+// ===== PROFILE & PIN =====
+
+function selectProfile(p) {
+  if (p === "parent") { showPinEntry(); return; }
+  currentProfile = p;
+  enterApp();
+}
+
+function showPinEntry() {
+  pinBuffer = "";
+  document.getElementById("pin-overlay").classList.remove("hidden");
+  const isSetup = !configData.parentPin;
+  document.getElementById("pin-prompt").textContent = isSetup ? "Create a 4-digit PIN" : "Enter your 4-digit PIN";
+  renderPinDots(); renderPinPad();
+}
+
+function cancelPin() { document.getElementById("pin-overlay").classList.add("hidden"); pinBuffer = ""; }
+
+function renderPinDots() {
+  const dots = document.querySelectorAll("#pin-dots .pin-dot");
+  dots.forEach((d,i) => { d.className = "pin-dot" + (i < pinBuffer.length ? " filled" : ""); });
+}
+
+function renderPinPad() {
+  const pad = document.getElementById("pin-pad");
+  [1,2,3,4,5,6,7,8,9,"",0,"⌫"].forEach(k => {
+    const b = document.createElement("button");
+    b.className = "pin-key" + (k === "" ? " empty" : "");
+    b.textContent = k;
+    if (k === "⌫") b.onclick = pinBack;
+    else if (k !== "") b.onclick = () => pinPress(k);
+    pad.innerHTML = ""; // clear first
+  });
+  // Rebuild
+  pad.innerHTML = [1,2,3,4,5,6,7,8,9,"",0,"⌫"].map(k => {
+    if (k==="") return '<button class="pin-key empty"></button>';
+    if (k==="⌫") return '<button class="pin-key" onclick="pinBack()">⌫</button>';
+    return '<button class="pin-key" onclick="pinPress('+k+')">'+k+'</button>';
+  }).join("");
+}
+
+function pinPress(n) {
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += n;
+  renderPinDots();
+  if (pinBuffer.length === 4) {
+    setTimeout(() => {
+      if (!configData.parentPin) {
+        configData.parentPin = pinBuffer;
+        saveConfig();
+        currentProfile = "parent";
+        document.getElementById("pin-overlay").classList.add("hidden");
+        pinBuffer = ""; enterApp();
+      } else if (pinBuffer === configData.parentPin) {
+        currentProfile = "parent";
+        document.getElementById("pin-overlay").classList.add("hidden");
+        pinBuffer = ""; enterApp();
+      } else {
+        document.querySelectorAll("#pin-dots .pin-dot").forEach(d => d.className = "pin-dot error");
+        setTimeout(() => { pinBuffer = ""; renderPinDots(); }, 600);
+      }
+    }, 200);
+  }
+}
+
+function pinBack() { pinBuffer = pinBuffer.slice(0,-1); renderPinDots(); }
+
+function enterApp() {
+  document.getElementById("screen-profiles").classList.add("hidden");
+  document.getElementById("screen-app").classList.remove("hidden");
+
+  if (currentProfile === "parent") {
+    document.getElementById("app-title").textContent = "Family Quest";
+    document.getElementById("btn-tracker").textContent = "📊 Dashboard";
+    document.getElementById("btn-calendar").classList.add("hidden");
+    document.getElementById("btn-newday").classList.add("hidden");
+    showTab("parent");
+  } else {
+    const kid = KIDS_META[currentProfile];
+    document.getElementById("app-title").textContent = kid.name + "'s Quest";
+    document.getElementById("btn-tracker").textContent = "🎯 Tasks";
+    document.getElementById("btn-calendar").classList.remove("hidden");
+    document.getElementById("btn-newday").classList.remove("hidden");
+    showTab("tracker");
+  }
+}
+
+function logout() {
+  currentProfile = null; currentTab = "tracker";
+  document.getElementById("screen-app").classList.add("hidden");
+  document.getElementById("screen-profiles").classList.remove("hidden");
+}
+
+// ===== TABS =====
+
+function showTab(t) {
+  currentTab = t;
+  document.getElementById("view-tracker").classList.add("hidden");
+  document.getElementById("view-calendar").classList.add("hidden");
+  document.getElementById("view-parent").classList.add("hidden");
+  document.getElementById("btn-tracker").classList.remove("active");
+  document.getElementById("btn-calendar").classList.remove("active");
+
+  if (t==="tracker" && currentProfile!=="parent") {
+    document.getElementById("view-tracker").classList.remove("hidden");
+    document.getElementById("btn-tracker").classList.add("active");
+    renderTracker();
+  } else if (t==="calendar") {
+    document.getElementById("view-calendar").classList.remove("hidden");
+    document.getElementById("btn-calendar").classList.add("active");
+    selectedDateKey=null; renderCalendar();
+  } else {
+    document.getElementById("view-parent").classList.remove("hidden");
+    document.getElementById("btn-tracker").classList.add("active");
+    renderParentDashboard();
+  }
+}
+
+// ===== KID TRACKER =====
+
+function kd() { return kidData[currentProfile]; }
+
+function updateRing() {
+  const k=kd(); if(!k) return;
+  const screenMs=MILESTONES.filter(m=>!m.label.startsWith("$"));
+  const next=screenMs.find(m=>m.minutes>k.totalMinutes)||screenMs[screenMs.length-1];
+  const pct=Math.min(k.totalMinutes/next.minutes,1);
+  const circ=2*Math.PI*76;
+  const el=document.getElementById("ring-progress");
+  el.setAttribute("stroke-dashoffset",circ*(1-pct));
+  el.setAttribute("stroke",pct>=1?"#27AE60":KIDS_META[currentProfile].color);
+  document.getElementById("total-display").textContent=fmtMin(k.totalMinutes);
+  document.getElementById("next-reward-text").innerHTML="Next reward: <strong>"+next.emoji+" "+next.label+"</strong> at "+fmtMin(next.minutes);
+  const avail=MILESTONES.filter(m=>m.minutes<=k.totalMinutes);
+  const btn=document.getElementById("redeem-btn");
+  if(avail.length>0){btn.classList.remove("hidden");btn.textContent="🎁 Choose Reward ("+avail.length+" available)";}
+  else{btn.classList.add("hidden");}
+  const pc=document.getElementById("pending-count");
+  const pend=k.pendingRedemptions||[];
+  if(pend.length>0) pc.innerHTML='<div class="pending-tag">⏳ '+pend.length+" reward"+(pend.length>1?"s":"")+" waiting for Dad's approval</div>";
+  else pc.innerHTML="";
+}
+
+function renderTodayTags() {
+  const k=kd(); if(!k) return;
+  const section=document.getElementById("today-section"); const c=document.getElementById("today-tags");
+  if(!k.completedToday||k.completedToday.length===0){section.classList.add("hidden");return;}
+  section.classList.remove("hidden");
+  c.innerHTML=k.completedToday.map(item=>{const cat=CATEGORIES[item.category];return '<span class="today-tag" style="background:'+cat.color+'22;border:1px solid '+cat.color+'44;color:'+cat.color+'">'+cat.emoji+" "+item.label+" +"+item.minutes+"m</span>";}).join("");
+}
+
+function renderCatTabs() {
+  const c=document.getElementById("cat-tabs");
+  c.innerHTML=Object.entries(CATEGORIES).map(([key,cat])=>{const a=key===activeCategory;return '<button class="cat-tab" data-cat="'+key+'" style="background:'+(a?cat.color+"30":"rgba(255,255,255,0.04)")+";border:1.5px solid "+(a?cat.color+"66":"rgba(255,255,255,0.08)")+";font-weight:"+(a?700:500)+";color:"+(a?cat.color:"rgba(255,255,255,0.5)")+'">'+cat.emoji+" "+cat.label+"</button>";}).join("");
+  c.querySelectorAll(".cat-tab").forEach(b=>{b.addEventListener("click",()=>{activeCategory=b.dataset.cat;renderCatTabs();renderTasks();});});
+}
+
+function renderTasks() {
+  const cat=CATEGORIES[activeCategory]; const k=kd(); if(!k) return;
+  const c=document.getElementById("task-list");
+  c.innerHTML=cat.items.map(task=>{
+    const done=(k.completedToday||[]).some(x=>x.id===task.id);
+    return '<button class="task-btn" data-id="'+task.id+'" '+(done?"disabled":"")+' style="background:'+(done?cat.color+"18":"rgba(255,255,255,0.04)")+";border:1.5px solid "+(done?cat.color+"44":"rgba(255,255,255,0.06)")+";opacity:"+(done?0.6:1)+';color:#e8e8f0"><div class="left"><div class="icon" style="background:'+(done?cat.color:"rgba(255,255,255,0.08)")+'">'+(done?"✓":cat.emoji)+'</div><span class="name">'+task.label+'</span></div><span class="mins" style="color:'+cat.color+'">+'+task.minutes+"m</span></button>";
+  }).join("");
+  c.querySelectorAll(".task-btn:not([disabled])").forEach(b=>{
+    b.addEventListener("click",()=>{
+      const task=cat.items.find(t=>t.id===b.dataset.id);
+      if(task){completeTask(task,activeCategory);b.style.transform="scale(1.03)";setTimeout(()=>{b.style.transform="scale(1)"},300);}
+    });
+  });
+}
+
+function completeTask(task, catKey) {
+  const k=kd();
+  const entry={...task,category:catKey,timestamp:new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})};
+  k.totalMinutes += task.minutes;
+  if(!k.completedToday) k.completedToday=[];
+  k.completedToday.push(entry);
+  const key=todayKey();
+  if(!k.dailyLog) k.dailyLog={};
+  if(!k.dailyLog[key]) k.dailyLog[key]=[];
+  k.dailyLog[key].push(entry);
+  saveKid(currentProfile);
+}
+
+function renderTracker() { updateRing(); renderTodayTags(); renderCatTabs(); renderTasks(); }
+
+// ===== KID CALENDAR =====
+
+function calPrev(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}selectedDateKey=null;renderCalendar();}
+function calNext(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}selectedDateKey=null;renderCalendar();}
+
+function renderCalendar() {
+  const k=kd(); if(!k) return; const tk=todayKey();
+  document.getElementById("cal-month-label").textContent=MONTH_NAMES[calMonth]+" "+calYear;
+  const grid=document.getElementById("cal-grid");
+  const fd=new Date(calYear,calMonth,1).getDay(); const dim=new Date(calYear,calMonth+1,0).getDate();
+  let html=DAY_LABELS.map(d=>'<div class="cal-day-label">'+d+'</div>').join("");
+  for(let i=0;i<fd;i++) html+='<div class="cal-cell empty"></div>';
+  for(let d=1;d<=dim;d++){
+    const dk=dateToKey(calYear,calMonth,d);const log=(k.dailyLog||{})[dk]||[];const red=(k.redeemLog||{})[dk]||[];
+    const has=log.length>0||red.length>0;const tot=log.reduce((s,i)=>s+i.minutes,0);
+    let cls="cal-cell";if(!has)cls+=" no-data";else cls+=" has-data";if(dk===tk)cls+=" is-today";if(dk===selectedDateKey)cls+=" selected";
+    html+='<div class="'+cls+'" onclick="selectDay(\''+dk+'\')"><span>'+d+'</span>';
+    if(has&&tot>0) html+='<span class="cal-mins">+'+tot+'</span>';
+    html+='</div>';
+  }
+  grid.innerHTML=html;renderDayDetail();
+}
+
+function selectDay(dk){selectedDateKey=selectedDateKey===dk?null:dk;renderCalendar();}
+
+function renderDayDetail(){
+  const w=document.getElementById("day-detail-wrap");if(!selectedDateKey){w.innerHTML="";return;}
+  const k=kd();const log=(k.dailyLog||{})[selectedDateKey]||[];const red=(k.redeemLog||{})[selectedDateKey]||[];
+  if(log.length===0&&red.length===0){w.innerHTML='<div class="day-detail"><p style="text-align:center;opacity:0.4;font-size:14px">No activity</p></div>';return;}
+  const tot=log.reduce((s,i)=>s+i.minutes,0);
+  let h='<div class="day-detail"><h4>📅 '+keyToDisplay(selectedDateKey)+'</h4><div class="day-total">'+log.length+' task'+(log.length!==1?'s':'')+' · '+fmtMin(tot)+' earned</div>';
+  log.forEach(i=>{const cat=CATEGORIES[i.category];h+='<div class="day-item"><span>'+(cat?cat.emoji:"•")+' '+i.label+(i.timestamp?'<span class="time">'+i.timestamp+'</span>':'')+'</span><span class="earned">+'+i.minutes+'m</span></div>';});
+  red.forEach(i=>{h+='<div class="day-item"><span>'+i.emoji+' '+i.label+'</span><span class="redeemed-item">-'+i.minutes+'m</span></div>';});
+  h+='</div>';w.innerHTML=h;
+}
+
+// ===== REDEEM =====
+
+function openRedeem(){
+  const k=kd();
+  document.getElementById("redeem-modal").classList.remove("hidden");
+  document.getElementById("redeem-balance").textContent="You have "+fmtMin(k.totalMinutes)+" saved up";
+  const list=document.getElementById("reward-list");
+  list.innerHTML=MILESTONES.map(m=>{
+    const can=k.totalMinutes>=m.minutes;
+    return '<button class="reward-btn" '+(can?'data-min="'+m.minutes+'" data-label="'+m.label+'" data-emoji="'+m.emoji+'"':"disabled")+' style="background:'+(can?"rgba(39,174,96,0.15)":"rgba(255,255,255,0.03)")+";border:1.5px solid "+(can?"rgba(39,174,96,0.3)":"rgba(255,255,255,0.06)")+";color:"+(can?"#e8e8f0":"rgba(255,255,255,0.3)")+'"><span>'+m.emoji+" "+m.label+'</span><span style="font-size:13px;font-weight:700;color:'+(can?"#27AE60":"rgba(255,255,255,0.2)")+'">'+fmtMin(m.minutes)+"</span></button>";
+  }).join("");
+  list.querySelectorAll(".reward-btn[data-min]").forEach(b=>{
+    b.addEventListener("click",()=>{requestRedeem({minutes:parseInt(b.dataset.min),label:b.dataset.label,emoji:b.dataset.emoji});});
+  });
+}
+
+function closeRedeem(){document.getElementById("redeem-modal").classList.add("hidden");}
+
+function requestRedeem(milestone){
+  const k=kd();
+  k.totalMinutes-=milestone.minutes;
+  if(!k.pendingRedemptions) k.pendingRedemptions=[];
+  k.pendingRedemptions.push({...milestone,kid:currentProfile,date:todayKey(),id:Date.now()});
+  saveKid(currentProfile); closeRedeem();
+}
+
+// ===== PARENT DASHBOARD =====
+
+function renderParentDashboard(){
+  renderPendingApprovals(); renderKidSummaries(); renderParentCalendar();
+}
+
+function renderPendingApprovals(){
+  const all=[...(kidData.cooper.pendingRedemptions||[]).map(p=>({...p,kid:"cooper"})),...(kidData.haylee.pendingRedemptions||[]).map(p=>({...p,kid:"haylee"}))];
+  const el=document.getElementById("pending-list");
+  if(all.length===0){el.innerHTML='<div class="no-pending">All clear — no pending requests</div>';return;}
+  el.innerHTML=all.map(p=>{const kid=KIDS_META[p.kid];return '<div class="pending-item"><div class="pi-info"><div class="pi-kid">'+kid.emoji+' '+kid.name+'</div><div class="pi-label">'+p.emoji+' '+p.label+'</div></div><div class="pi-cost">'+fmtMin(p.minutes)+'</div><div class="pi-actions"><button class="pi-approve" onclick="approveRedeem(\''+p.kid+'\','+p.id+')">✓</button><button class="pi-deny" onclick="denyRedeem(\''+p.kid+'\','+p.id+')">✗</button></div></div>';}).join("");
+}
+
+function approveRedeem(kid,id){
+  const kd=kidData[kid]; const idx=(kd.pendingRedemptions||[]).findIndex(p=>p.id===id);
+  if(idx===-1) return;
+  const item=kd.pendingRedemptions.splice(idx,1)[0];
+  const key=item.date||todayKey();
+  if(!kd.redeemLog) kd.redeemLog={};
+  if(!kd.redeemLog[key]) kd.redeemLog[key]=[];
+  kd.redeemLog[key].push(item);
+  saveKid(kid);
+}
+
+function denyRedeem(kid,id){
+  const kd=kidData[kid]; const idx=(kd.pendingRedemptions||[]).findIndex(p=>p.id===id);
+  if(idx===-1) return;
+  const item=kd.pendingRedemptions.splice(idx,1)[0];
+  kd.totalMinutes+=item.minutes;
+  saveKid(kid);
+}
+
+function renderKidSummaries(){
+  const el=document.getElementById("parent-summaries");
+  el.innerHTML=["cooper","haylee"].map(kid=>{
+    const k=kidData[kid];const info=KIDS_META[kid];
+    const todayTasks=(k.completedToday||[]).length;
+    const todayMin=(k.completedToday||[]).reduce((s,i)=>s+i.minutes,0);
+    return '<div class="kid-summary"><div class="ks-header"><span class="ks-name">'+info.emoji+' '+info.name+'</span><span class="ks-balance">'+fmtMin(k.totalMinutes||0)+'</span></div><div class="ks-stats">Today: '+todayTasks+' tasks · '+fmtMin(todayMin)+' earned · '+(k.streakDays||0)+' day streak</div></div>';
+  }).join("");
+}
+
+// ===== PARENT CALENDAR =====
+
+function renderParentCalendar(){
+  document.getElementById("parent-kid-toggle").innerHTML=["cooper","haylee"].map(kid=>{
+    const info=KIDS_META[kid];const active=parentViewKid===kid;
+    return '<button class="pkt-btn '+(active?"active":"")+'" onclick="setParentViewKid(\''+kid+'\')">'+info.emoji+' '+info.name+'</button>';
+  }).join("");
+  renderPCal();
+}
+
+function setParentViewKid(kid){parentViewKid=kid;pSelectedDateKey=null;renderParentCalendar();}
+function pCalPrev(){pCalMonth--;if(pCalMonth<0){pCalMonth=11;pCalYear--;}pSelectedDateKey=null;renderPCal();}
+function pCalNext(){pCalMonth++;if(pCalMonth>11){pCalMonth=0;pCalYear++;}pSelectedDateKey=null;renderPCal();}
+
+function renderPCal(){
+  const k=kidData[parentViewKid];const tk=todayKey();
+  document.getElementById("pcal-month-label").textContent=MONTH_NAMES[pCalMonth]+" "+pCalYear;
+  const grid=document.getElementById("pcal-grid");
+  const fd=new Date(pCalYear,pCalMonth,1).getDay();const dim=new Date(pCalYear,pCalMonth+1,0).getDate();
+  let html=DAY_LABELS.map(d=>'<div class="cal-day-label">'+d+'</div>').join("");
+  for(let i=0;i<fd;i++) html+='<div class="cal-cell empty"></div>';
+  for(let d=1;d<=dim;d++){
+    const dk=dateToKey(pCalYear,pCalMonth,d);const log=(k.dailyLog||{})[dk]||[];const red=(k.redeemLog||{})[dk]||[];
+    const has=log.length>0||red.length>0;const tot=log.reduce((s,i)=>s+i.minutes,0);
+    let cls="cal-cell";if(!has)cls+=" no-data";else cls+=" has-data";if(dk===tk)cls+=" is-today";if(dk===pSelectedDateKey)cls+=" selected";
+    html+='<div class="'+cls+'" onclick="pSelectDay(\''+dk+'\')"><span>'+d+'</span>';
+    if(has&&tot>0) html+='<span class="cal-mins">+'+tot+'</span>';
+    html+='</div>';
+  }
+  grid.innerHTML=html;renderPDayDetail();
+}
+
+function pSelectDay(dk){pSelectedDateKey=pSelectedDateKey===dk?null:dk;renderPCal();}
+
+function renderPDayDetail(){
+  const w=document.getElementById("pday-detail-wrap");if(!pSelectedDateKey){w.innerHTML="";return;}
+  const k=kidData[parentViewKid];const log=(k.dailyLog||{})[pSelectedDateKey]||[];const red=(k.redeemLog||{})[pSelectedDateKey]||[];
+  if(log.length===0&&red.length===0){w.innerHTML='<div class="day-detail"><p style="text-align:center;opacity:0.4;font-size:14px">No activity</p></div>';return;}
+  const tot=log.reduce((s,i)=>s+i.minutes,0);
+  let h='<div class="day-detail"><h4>📅 '+keyToDisplay(pSelectedDateKey)+' — '+KIDS_META[parentViewKid].name+'</h4><div class="day-total">'+log.length+' task'+(log.length!==1?'s':'')+' · '+fmtMin(tot)+' earned</div>';
+  log.forEach(i=>{const cat=CATEGORIES[i.category];h+='<div class="day-item"><span>'+(cat?cat.emoji:"•")+' '+i.label+(i.timestamp?'<span class="time">'+i.timestamp+'</span>':'')+'</span><span class="earned">+'+i.minutes+'m</span></div>';});
+  red.forEach(i=>{h+='<div class="day-item"><span>'+i.emoji+' '+i.label+'</span><span class="redeemed-item">-'+i.minutes+'m</span></div>';});
+  h+='</div>';w.innerHTML=h;
+}
+
+function resetDay(){
+  if(currentProfile==="parent") return;
+  const k=kd();
+  if(k.completedToday&&k.completedToday.length>0){
+    k.streakDays=(k.streakDays||0)+1;
+    if(!k.dailyLog[k.lastDate]||k.dailyLog[k.lastDate].length===0) k.dailyLog[k.lastDate]=k.completedToday.slice();
+  }
+  k.completedToday=[]; k.lastDate=todayKey();
+  saveKid(currentProfile);
+}
+
+// ===== INIT =====
+document.addEventListener("DOMContentLoaded", () => {
+  try {
+    startListening();
+  } catch(e) {
+    console.error("Init error:", e);
+    document.getElementById("screen-loading").classList.add("hidden");
+    document.getElementById("screen-profiles").classList.remove("hidden");
+  }
+});
+
+// Offline detection
+window.addEventListener("online", () => setSyncStatus(true));
+window.addEventListener("offline", () => setSyncStatus(false));
+</script>
+</body>
+</html>
