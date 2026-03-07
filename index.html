@@ -220,6 +220,43 @@
   }
   .pkt-btn.active { border-color: rgba(155,89,182,0.5); color: #9B59B6; background: rgba(155,89,182,0.1); }
 
+  /* Parent Management */
+  .mgmt-kid-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
+  .add-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  .add-input {
+    flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px; padding: 10px 14px; color: #e8e8f0; font-size: 14px; font-family: inherit;
+    outline: none;
+  }
+  .add-input:focus { border-color: rgba(155,89,182,0.5); }
+  .add-input::placeholder { color: rgba(255,255,255,0.25); }
+  .add-input.small { width: 80px; flex: none; text-align: center; }
+  .add-btn {
+    background: linear-gradient(135deg, #9B59B6, #8E44AD); border: none; border-radius: 10px;
+    color: #fff; padding: 10px 18px; font-size: 14px; font-weight: 700; white-space: nowrap;
+  }
+  .add-btn.green { background: linear-gradient(135deg, #27AE60, #2ECC71); }
+  .add-btn.blue { background: linear-gradient(135deg, #2D9CDB, #2980B9); }
+  .custom-item {
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px; padding: 10px 14px; margin-bottom: 6px; font-size: 14px;
+  }
+  .custom-item .ci-info { flex: 1; }
+  .custom-item .ci-mins { font-family: 'Fredoka One', cursive; color: #27AE60; font-size: 13px; margin: 0 12px; }
+  .custom-item .ci-del {
+    background: rgba(231,76,60,0.15); border: 1px solid rgba(231,76,60,0.3);
+    border-radius: 6px; color: #E74C3C; padding: 4px 10px; font-size: 12px; font-weight: 700;
+  }
+  .mgmt-label { font-size: 13px; font-weight: 700; opacity: 0.5; margin: 16px 0 8px 2px; text-transform: uppercase; letter-spacing: 1px; }
+  .mgmt-label:first-child { margin-top: 0; }
+  .quick-add-row { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; }
+  .quick-add-row select {
+    flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px; padding: 10px 14px; color: #e8e8f0; font-size: 14px; font-family: inherit;
+    outline: none; appearance: none;
+  }
+
   /* Modals */
   .modal-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
@@ -241,6 +278,29 @@
     margin-top: 16px; width: 100%; padding: 12px; background: rgba(255,255,255,0.06);
     border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #e8e8f0; font-size: 14px;
   }
+
+  /* Bank */
+  .bank-card {
+    background: linear-gradient(135deg, rgba(39,174,96,0.1), rgba(46,204,113,0.08));
+    border: 1px solid rgba(39,174,96,0.2); border-radius: 16px;
+    padding: 16px 20px; margin-bottom: 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .bank-left { display: flex; align-items: center; gap: 12px; }
+  .bank-icon { font-size: 28px; }
+  .bank-label { font-size: 12px; opacity: 0.5; text-transform: uppercase; letter-spacing: 1px; }
+  .bank-amount { font-family: 'Fredoka One', cursive; font-size: 24px; color: #2ECC71; }
+  .bank-history-btn {
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px; color: #e8e8f0; padding: 6px 12px; font-size: 12px;
+  }
+  .bank-tx { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; }
+  .bank-tx:last-child { border-bottom: none; }
+  .bank-tx .btx-amount { font-weight: 700; color: #2ECC71; font-family: 'Fredoka One', cursive; }
+  .bank-tx .btx-date { font-size: 11px; opacity: 0.4; }
+  .parent-bank-row { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06); }
+  .parent-bank-label { font-size: 13px; opacity: 0.6; }
+  .parent-bank-amount { font-family: 'Fredoka One', cursive; font-size: 18px; color: #2ECC71; }
 
   .sync-dot {
     display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px;
@@ -331,6 +391,19 @@
         <button class="redeem-btn hidden" id="redeem-btn" onclick="openRedeem()">🎁 Redeem</button>
         <div id="pending-count"></div>
       </div>
+
+      <!-- Bank Balance -->
+      <div class="bank-card" id="bank-card">
+        <div class="bank-left">
+          <div class="bank-icon">🏦</div>
+          <div>
+            <div class="bank-label">My Bank</div>
+            <div class="bank-amount" id="bank-display">$0.00</div>
+          </div>
+        </div>
+        <button class="bank-history-btn" onclick="openBankHistory()">View History</button>
+      </div>
+
       <div class="today-section hidden" id="today-section">
         <h3>Today's Wins</h3>
         <div class="today-tags" id="today-tags"></div>
@@ -358,6 +431,57 @@
         <h3>📊 Overview</h3>
         <div id="parent-summaries"></div>
       </div>
+
+      <!-- Direct Add Time / Money -->
+      <div class="parent-section">
+        <h3>➕ Add Time or Money</h3>
+        <div class="mgmt-kid-toggle" id="direct-kid-toggle"></div>
+        <div class="quick-add-row">
+          <input type="number" class="add-input small" id="direct-minutes" placeholder="Min" min="1">
+          <button class="add-btn green" onclick="directAddMinutes()">+ Add Screen Time</button>
+        </div>
+        <div class="quick-add-row">
+          <input type="number" class="add-input small" id="direct-dollars" placeholder="$" min="0.25" step="0.25">
+          <button class="add-btn green" onclick="directAddMoney()">+ Add to Bank</button>
+        </div>
+      </div>
+
+      <!-- Custom Task Management -->
+      <div class="parent-section">
+        <h3>🛠️ Manage Custom Tasks</h3>
+        <div class="mgmt-kid-toggle" id="task-kid-toggle"></div>
+        <div class="mgmt-label">Add a Custom Task</div>
+        <div class="add-row">
+          <input type="text" class="add-input" id="custom-task-name" placeholder="Task name" maxlength="50">
+          <input type="number" class="add-input small" id="custom-task-mins" placeholder="Min" min="1">
+        </div>
+        <div class="add-row">
+          <select id="custom-task-cat">
+            <option value="chores">🧹 Chores</option>
+            <option value="school">📚 School</option>
+            <option value="outside">☀️ Outside</option>
+            <option value="bonus">⭐ Bonus</option>
+          </select>
+          <button class="add-btn" onclick="addCustomTask()">+ Add Task</button>
+        </div>
+        <div class="mgmt-label">Custom Tasks</div>
+        <div id="custom-task-list"></div>
+      </div>
+
+      <!-- Custom Reward Management -->
+      <div class="parent-section">
+        <h3>🎁 Manage Custom Rewards</h3>
+        <div class="mgmt-kid-toggle" id="reward-kid-toggle"></div>
+        <div class="mgmt-label">Add a Custom Reward</div>
+        <div class="add-row">
+          <input type="text" class="add-input" id="custom-reward-name" placeholder="Reward name" maxlength="50">
+          <input type="number" class="add-input small" id="custom-reward-mins" placeholder="Min" min="5">
+          <button class="add-btn" onclick="addCustomReward()">+ Add</button>
+        </div>
+        <div class="mgmt-label">Custom Rewards</div>
+        <div id="custom-reward-list"></div>
+      </div>
+
       <div class="parent-section">
         <h3>📅 View History</h3>
         <div style="display:flex;gap:8px;margin-bottom:16px" id="parent-kid-toggle"></div>
@@ -373,6 +497,16 @@
   </div>
 </div>
 
+<!-- Bank History Modal -->
+<div class="modal-overlay hidden" id="bank-modal" onclick="closeBankHistory()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h2>🏦 Bank History</h2>
+    <p class="subtitle" id="bank-modal-balance"></p>
+    <div id="bank-history-list"></div>
+    <button class="modal-close" onclick="closeBankHistory()">Close</button>
+  </div>
+</div>
+
 <!-- Redeem Modal -->
 <div class="modal-overlay hidden" id="redeem-modal" onclick="closeRedeem()">
   <div class="modal" onclick="event.stopPropagation()">
@@ -384,8 +518,8 @@
 </div>
 
 <!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 
 <script>
 // ===== FIREBASE INIT =====
@@ -451,6 +585,7 @@ let currentTab = "tracker";
 let calYear, calMonth, selectedDateKey = null;
 let pCalYear, pCalMonth, pSelectedDateKey = null, parentViewKid = "cooper";
 let pinBuffer = "";
+let mgmtKidTask = "cooper", mgmtKidReward = "cooper", mgmtKidDirect = "cooper";
 let unsubscribers = [];
 
 const n = new Date();
@@ -463,7 +598,7 @@ function keyToDisplay(k) { if(k===todayKey()) return "Today"; const p=k.split("-
 function fmtMin(m) { if(m<60) return m+"m"; const h=Math.floor(m/60),r=m%60; return r>0?h+"h "+r+"m":h+"h"; }
 
 function defaultKidDoc() {
-  return { totalMinutes:0, completedToday:[], dailyLog:{}, redeemLog:{}, pendingRedemptions:[], lastDate:todayKey(), streakDays:0 };
+  return { totalMinutes:0, completedToday:[], dailyLog:{}, redeemLog:{}, pendingRedemptions:[], lastDate:todayKey(), streakDays:0, bankBalance:0, bankHistory:[], customTasks:[], customRewards:[] };
 }
 
 // ===== FIREBASE SYNC =====
@@ -488,6 +623,10 @@ function startListening() {
       if (!kidData.cooper.dailyLog) kidData.cooper.dailyLog = {};
       if (!kidData.cooper.redeemLog) kidData.cooper.redeemLog = {};
       if (!kidData.cooper.completedToday) kidData.cooper.completedToday = [];
+      if (kidData.cooper.bankBalance === undefined) kidData.cooper.bankBalance = 0;
+      if (!kidData.cooper.bankHistory) kidData.cooper.bankHistory = [];
+      if (!kidData.cooper.customTasks) kidData.cooper.customTasks = [];
+      if (!kidData.cooper.customRewards) kidData.cooper.customRewards = [];
       checkNewDayRemote("cooper");
       onDataUpdate();
     }, err => { console.error("Cooper listener error:", err); setSyncStatus(false); }),
@@ -497,6 +636,10 @@ function startListening() {
       if (!kidData.haylee.dailyLog) kidData.haylee.dailyLog = {};
       if (!kidData.haylee.redeemLog) kidData.haylee.redeemLog = {};
       if (!kidData.haylee.completedToday) kidData.haylee.completedToday = [];
+      if (kidData.haylee.bankBalance === undefined) kidData.haylee.bankBalance = 0;
+      if (!kidData.haylee.bankHistory) kidData.haylee.bankHistory = [];
+      if (!kidData.haylee.customTasks) kidData.haylee.customTasks = [];
+      if (!kidData.haylee.customRewards) kidData.haylee.customRewards = [];
       checkNewDayRemote("haylee");
       onDataUpdate();
     }, err => { console.error("Haylee listener error:", err); setSyncStatus(false); }),
@@ -527,10 +670,9 @@ function saveConfig() {
 function checkNewDayRemote(kid) {
   const kd = kidData[kid];
   if (!kd || !kd.lastDate || kd.lastDate === todayKey()) return;
+  // completedToday items are already in dailyLog from completeTask, so just update streak
   if (kd.completedToday && kd.completedToday.length > 0) {
     kd.streakDays = (kd.streakDays || 0) + 1;
-    if (!kd.dailyLog) kd.dailyLog = {};
-    if (!kd.dailyLog[kd.lastDate]) kd.dailyLog[kd.lastDate] = kd.completedToday.slice();
   }
   kd.completedToday = [];
   kd.lastDate = todayKey();
@@ -690,6 +832,7 @@ function kd() { return kidData[currentProfile]; }
 function updateRing() {
   const k=kd(); if(!k) return;
   const screenMs=MILESTONES.filter(m=>!m.label.startsWith("$"));
+  // Next milestone for the ring progress — use screen time milestones only
   const next=screenMs.find(m=>m.minutes>k.totalMinutes)||screenMs[screenMs.length-1];
   const pct=Math.min(k.totalMinutes/next.minutes,1);
   const circ=2*Math.PI*76;
@@ -698,9 +841,12 @@ function updateRing() {
   el.setAttribute("stroke",pct>=1?"#27AE60":KIDS_META[currentProfile].color);
   document.getElementById("total-display").textContent=fmtMin(k.totalMinutes);
   document.getElementById("next-reward-text").innerHTML="Next reward: <strong>"+next.emoji+" "+next.label+"</strong> at "+fmtMin(next.minutes);
-  const avail=MILESTONES.filter(m=>m.minutes<=k.totalMinutes);
+  // Count available rewards — merge custom rewards, then count all affordable ones
+  const customR = (k.customRewards||[]).map(r => ({minutes:r.minutes, label:r.label, emoji:r.emoji||"🎁"}));
+  const allRewards = [...MILESTONES, ...customR];
+  const availCount = allRewards.filter(m => m.minutes <= k.totalMinutes).length;
   const btn=document.getElementById("redeem-btn");
-  if(avail.length>0){btn.classList.remove("hidden");btn.textContent="🎁 Choose Reward ("+avail.length+" available)";}
+  if(availCount>0){btn.classList.remove("hidden");btn.textContent="🎁 Choose Reward ("+availCount+" available)";}
   else{btn.classList.add("hidden");}
   const pc=document.getElementById("pending-count");
   const pend=k.pendingRedemptions||[];
@@ -713,7 +859,10 @@ function renderTodayTags() {
   const section=document.getElementById("today-section"); const c=document.getElementById("today-tags");
   if(!k.completedToday||k.completedToday.length===0){section.classList.add("hidden");return;}
   section.classList.remove("hidden");
-  c.innerHTML=k.completedToday.map(item=>{const cat=CATEGORIES[item.category];return '<span class="today-tag" style="background:'+cat.color+'22;border:1px solid '+cat.color+'44;color:'+cat.color+'">'+cat.emoji+" "+item.label+" +"+item.minutes+"m</span>";}).join("");
+  c.innerHTML=k.completedToday.map(item=>{
+    const cat=CATEGORIES[item.category]||{color:"#9B59B6",emoji:"⭐"};
+    return '<span class="today-tag" style="background:'+cat.color+'22;border:1px solid '+cat.color+'44;color:'+cat.color+'">'+cat.emoji+" "+item.label+" +"+item.minutes+"m</span>";
+  }).join("");
 }
 
 function renderCatTabs() {
@@ -724,14 +873,18 @@ function renderCatTabs() {
 
 function renderTasks() {
   const cat=CATEGORIES[activeCategory]; const k=kd(); if(!k) return;
+  // Merge default tasks with any custom tasks for this category
+  const customTasks = (k.customTasks||[]).filter(t => t.category === activeCategory);
+  const allTasks = [...cat.items, ...customTasks];
   const c=document.getElementById("task-list");
-  c.innerHTML=cat.items.map(task=>{
+  c.innerHTML=allTasks.map(task=>{
     const done=(k.completedToday||[]).some(x=>x.id===task.id);
-    return '<button class="task-btn" data-id="'+task.id+'" '+(done?"disabled":"")+' style="background:'+(done?cat.color+"18":"rgba(255,255,255,0.04)")+";border:1.5px solid "+(done?cat.color+"44":"rgba(255,255,255,0.06)")+";opacity:"+(done?0.6:1)+';color:#e8e8f0"><div class="left"><div class="icon" style="background:'+(done?cat.color:"rgba(255,255,255,0.08)")+'">'+(done?"✓":cat.emoji)+'</div><span class="name">'+task.label+'</span></div><span class="mins" style="color:'+cat.color+'">+'+task.minutes+"m</span></button>";
+    const isCustom = customTasks.some(ct => ct.id === task.id);
+    return '<button class="task-btn" data-id="'+task.id+'" '+(done?"disabled":"")+' style="background:'+(done?cat.color+"18":"rgba(255,255,255,0.04)")+";border:1.5px solid "+(done?cat.color+"44":"rgba(255,255,255,0.06)")+";opacity:"+(done?0.6:1)+';color:#e8e8f0"><div class="left"><div class="icon" style="background:'+(done?cat.color:"rgba(255,255,255,0.08)")+'">'+(done?"✓":cat.emoji)+'</div><span class="name">'+task.label+(isCustom?' <span style="font-size:10px;opacity:0.4">★</span>':'')+'</span></div><span class="mins" style="color:'+cat.color+'">+'+task.minutes+"m</span></button>";
   }).join("");
   c.querySelectorAll(".task-btn:not([disabled])").forEach(b=>{
     b.addEventListener("click",()=>{
-      const task=cat.items.find(t=>t.id===b.dataset.id);
+      const task=allTasks.find(t=>t.id===b.dataset.id);
       if(task){completeTask(task,activeCategory);b.style.transform="scale(1.03)";setTimeout(()=>{b.style.transform="scale(1)"},300);}
     });
   });
@@ -739,7 +892,7 @@ function renderTasks() {
 
 function completeTask(task, catKey) {
   const k=kd();
-  const entry={...task,category:catKey,timestamp:new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})};
+  const entry={id:task.id, label:task.label, minutes:task.minutes, category:catKey, timestamp:new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})};
   k.totalMinutes += task.minutes;
   if(!k.completedToday) k.completedToday=[];
   k.completedToday.push(entry);
@@ -750,7 +903,31 @@ function completeTask(task, catKey) {
   saveKid(currentProfile);
 }
 
-function renderTracker() { updateRing(); renderTodayTags(); renderCatTabs(); renderTasks(); }
+function renderTracker() { updateRing(); renderBank(); renderTodayTags(); renderCatTabs(); renderTasks(); }
+
+function renderBank() {
+  const k=kd(); if(!k) return;
+  const bal = k.bankBalance || 0;
+  document.getElementById("bank-display").textContent = "$" + bal.toFixed(2);
+}
+
+function openBankHistory() {
+  const k=kd(); if(!k) return;
+  document.getElementById("bank-modal").classList.remove("hidden");
+  const bal = k.bankBalance || 0;
+  document.getElementById("bank-modal-balance").textContent = "Current balance: $" + bal.toFixed(2);
+  const list = document.getElementById("bank-history-list");
+  const history = k.bankHistory || [];
+  if(history.length === 0) {
+    list.innerHTML = '<p style="text-align:center;opacity:0.4;font-size:14px;padding:16px 0">No transactions yet — trade screen time for cash!</p>';
+    return;
+  }
+  list.innerHTML = history.map(tx => {
+    return '<div class="bank-tx"><div><div>'+tx.label+'</div><div class="btx-date">'+keyToDisplay(tx.date)+'</div></div><div class="btx-amount">+$'+tx.amount.toFixed(2)+'</div></div>';
+  }).join("");
+}
+
+function closeBankHistory() { document.getElementById("bank-modal").classList.add("hidden"); }
 
 // ===== KID CALENDAR =====
 
@@ -783,8 +960,8 @@ function renderDayDetail(){
   if(log.length===0&&red.length===0){w.innerHTML='<div class="day-detail"><p style="text-align:center;opacity:0.4;font-size:14px">No activity</p></div>';return;}
   const tot=log.reduce((s,i)=>s+i.minutes,0);
   let h='<div class="day-detail"><h4>📅 '+keyToDisplay(selectedDateKey)+'</h4><div class="day-total">'+log.length+' task'+(log.length!==1?'s':'')+' · '+fmtMin(tot)+' earned</div>';
-  log.forEach(i=>{const cat=CATEGORIES[i.category];h+='<div class="day-item"><span>'+(cat?cat.emoji:"•")+' '+i.label+(i.timestamp?'<span class="time">'+i.timestamp+'</span>':'')+'</span><span class="earned">+'+i.minutes+'m</span></div>';});
-  red.forEach(i=>{h+='<div class="day-item"><span>'+i.emoji+' '+i.label+'</span><span class="redeemed-item">-'+i.minutes+'m</span></div>';});
+  log.forEach(i=>{const cat=CATEGORIES[i.category]||{emoji:"⭐",color:"#9B59B6"};h+='<div class="day-item"><span>'+cat.emoji+' '+i.label+(i.timestamp?'<span class="time">'+i.timestamp+'</span>':'')+'</span><span class="earned">+'+i.minutes+'m</span></div>';});
+  red.forEach(i=>{h+='<div class="day-item"><span>'+(i.emoji||"🎁")+' '+i.label+'</span><span class="redeemed-item">-'+i.minutes+'m</span></div>';});
   h+='</div>';w.innerHTML=h;
 }
 
@@ -794,10 +971,13 @@ function openRedeem(){
   const k=kd();
   document.getElementById("redeem-modal").classList.remove("hidden");
   document.getElementById("redeem-balance").textContent="You have "+fmtMin(k.totalMinutes)+" saved up";
+  // Merge default milestones with custom rewards
+  const customR = (k.customRewards||[]).map(r => ({minutes:r.minutes, label:r.label, emoji:r.emoji||"🎁"}));
+  const allRewards = [...MILESTONES, ...customR].sort((a,b) => a.minutes - b.minutes);
   const list=document.getElementById("reward-list");
-  list.innerHTML=MILESTONES.map(m=>{
+  list.innerHTML=allRewards.map(m=>{
     const can=k.totalMinutes>=m.minutes;
-    return '<button class="reward-btn" '+(can?'data-min="'+m.minutes+'" data-label="'+m.label+'" data-emoji="'+m.emoji+'"':"disabled")+' style="background:'+(can?"rgba(39,174,96,0.15)":"rgba(255,255,255,0.03)")+";border:1.5px solid "+(can?"rgba(39,174,96,0.3)":"rgba(255,255,255,0.06)")+";color:"+(can?"#e8e8f0":"rgba(255,255,255,0.3)")+'"><span>'+m.emoji+" "+m.label+'</span><span style="font-size:13px;font-weight:700;color:'+(can?"#27AE60":"rgba(255,255,255,0.2)")+'">'+fmtMin(m.minutes)+"</span></button>";
+    return '<button class="reward-btn" '+(can?'data-min="'+m.minutes+'" data-label="'+m.label+'" data-emoji="'+(m.emoji||"🎁")+'"':"disabled")+' style="background:'+(can?"rgba(39,174,96,0.15)":"rgba(255,255,255,0.03)")+";border:1.5px solid "+(can?"rgba(39,174,96,0.3)":"rgba(255,255,255,0.06)")+";color:"+(can?"#e8e8f0":"rgba(255,255,255,0.3)")+'"><span>'+(m.emoji||"🎁")+" "+m.label+'</span><span style="font-size:13px;font-weight:700;color:'+(can?"#27AE60":"rgba(255,255,255,0.2)")+'">'+fmtMin(m.minutes)+"</span></button>";
   }).join("");
   list.querySelectorAll(".reward-btn[data-min]").forEach(b=>{
     b.addEventListener("click",()=>{requestRedeem({minutes:parseInt(b.dataset.min),label:b.dataset.label,emoji:b.dataset.emoji});});
@@ -810,14 +990,21 @@ function requestRedeem(milestone){
   const k=kd();
   k.totalMinutes-=milestone.minutes;
   if(!k.pendingRedemptions) k.pendingRedemptions=[];
-  k.pendingRedemptions.push({...milestone,kid:currentProfile,date:todayKey(),id:Date.now()});
+  k.pendingRedemptions.push({
+    minutes: milestone.minutes,
+    label: milestone.label,
+    emoji: milestone.emoji,
+    kid: currentProfile,
+    date: todayKey(),
+    id: Date.now()
+  });
   saveKid(currentProfile); closeRedeem();
 }
 
 // ===== PARENT DASHBOARD =====
 
 function renderParentDashboard(){
-  renderPendingApprovals(); renderKidSummaries(); renderParentCalendar();
+  renderPendingApprovals(); renderKidSummaries(); renderMgmtToggles(); renderCustomTaskList(); renderCustomRewardList(); renderParentCalendar();
 }
 
 function renderPendingApprovals(){
@@ -835,6 +1022,19 @@ function approveRedeem(kid,id){
   if(!kd.redeemLog) kd.redeemLog={};
   if(!kd.redeemLog[key]) kd.redeemLog[key]=[];
   kd.redeemLog[key].push(item);
+
+  // If it's a money reward, add to bank
+  if(item.label && item.label.startsWith("$")){
+    const amount = parseFloat(item.label.replace("$",""));
+    if(!isNaN(amount)){
+      if(!kd.bankBalance) kd.bankBalance = 0;
+      kd.bankBalance += amount;
+      kd.bankBalance = Math.round(kd.bankBalance * 100) / 100;
+      if(!kd.bankHistory) kd.bankHistory = [];
+      kd.bankHistory.unshift({ amount: amount, date: todayKey(), label: item.label + " earned", id: Date.now() });
+    }
+  }
+
   saveKid(kid);
 }
 
@@ -848,11 +1048,15 @@ function denyRedeem(kid,id){
 
 function renderKidSummaries(){
   const el=document.getElementById("parent-summaries");
+  const tk=todayKey();
   el.innerHTML=["cooper","haylee"].map(kid=>{
     const k=kidData[kid];const info=KIDS_META[kid];
-    const todayTasks=(k.completedToday||[]).length;
-    const todayMin=(k.completedToday||[]).reduce((s,i)=>s+i.minutes,0);
-    return '<div class="kid-summary"><div class="ks-header"><span class="ks-name">'+info.emoji+' '+info.name+'</span><span class="ks-balance">'+fmtMin(k.totalMinutes||0)+'</span></div><div class="ks-stats">Today: '+todayTasks+' tasks · '+fmtMin(todayMin)+' earned · '+(k.streakDays||0)+' day streak</div></div>';
+    // Use dailyLog for today since that's the source of truth, fall back to completedToday
+    const todayLog = (k.dailyLog && k.dailyLog[tk]) ? k.dailyLog[tk] : (k.completedToday||[]);
+    const todayTasks=todayLog.length;
+    const todayMin=todayLog.reduce((s,i)=>s+(i.minutes||0),0);
+    const bank = (k.bankBalance||0).toFixed(2);
+    return '<div class="kid-summary"><div class="ks-header"><span class="ks-name">'+info.emoji+' '+info.name+'</span><span class="ks-balance">'+fmtMin(k.totalMinutes||0)+'</span></div><div class="ks-stats">Today: '+todayTasks+' task'+(todayTasks!==1?'s':'')+' · '+fmtMin(todayMin)+' earned · '+(k.streakDays||0)+' day streak</div><div class="parent-bank-row"><span class="parent-bank-label">🏦 Bank Balance</span><span class="parent-bank-amount">$'+bank+'</span></div></div>';
   }).join("");
 }
 
@@ -896,8 +1100,8 @@ function renderPDayDetail(){
   if(log.length===0&&red.length===0){w.innerHTML='<div class="day-detail"><p style="text-align:center;opacity:0.4;font-size:14px">No activity</p></div>';return;}
   const tot=log.reduce((s,i)=>s+i.minutes,0);
   let h='<div class="day-detail"><h4>📅 '+keyToDisplay(pSelectedDateKey)+' — '+KIDS_META[parentViewKid].name+'</h4><div class="day-total">'+log.length+' task'+(log.length!==1?'s':'')+' · '+fmtMin(tot)+' earned</div>';
-  log.forEach(i=>{const cat=CATEGORIES[i.category];h+='<div class="day-item"><span>'+(cat?cat.emoji:"•")+' '+i.label+(i.timestamp?'<span class="time">'+i.timestamp+'</span>':'')+'</span><span class="earned">+'+i.minutes+'m</span></div>';});
-  red.forEach(i=>{h+='<div class="day-item"><span>'+i.emoji+' '+i.label+'</span><span class="redeemed-item">-'+i.minutes+'m</span></div>';});
+  log.forEach(i=>{const cat=CATEGORIES[i.category]||{emoji:"⭐"};h+='<div class="day-item"><span>'+cat.emoji+' '+i.label+(i.timestamp?'<span class="time">'+i.timestamp+'</span>':'')+'</span><span class="earned">+'+i.minutes+'m</span></div>';});
+  red.forEach(i=>{h+='<div class="day-item"><span>'+(i.emoji||"🎁")+' '+i.label+'</span><span class="redeemed-item">-'+i.minutes+'m</span></div>';});
   h+='</div>';w.innerHTML=h;
 }
 
@@ -906,10 +1110,142 @@ function resetDay(){
   const k=kd();
   if(k.completedToday&&k.completedToday.length>0){
     k.streakDays=(k.streakDays||0)+1;
-    if(!k.dailyLog[k.lastDate]||k.dailyLog[k.lastDate].length===0) k.dailyLog[k.lastDate]=k.completedToday.slice();
   }
   k.completedToday=[]; k.lastDate=todayKey();
   saveKid(currentProfile);
+}
+
+// ===== PARENT MANAGEMENT =====
+
+function renderMgmtToggles() {
+  ["direct","task","reward"].forEach(section => {
+    const el = document.getElementById(section + "-kid-toggle");
+    if(!el) return;
+    const current = section==="direct" ? mgmtKidDirect : section==="task" ? mgmtKidTask : mgmtKidReward;
+    el.innerHTML = ["cooper","haylee"].map(kid => {
+      const info=KIDS_META[kid]; const active = current===kid;
+      return '<button class="pkt-btn '+(active?"active":"")+'" onclick="setMgmtKid(\''+section+'\',\''+kid+'\')">'+info.emoji+' '+info.name+'</button>';
+    }).join("");
+  });
+}
+
+function setMgmtKid(section, kid) {
+  if(section==="direct") mgmtKidDirect=kid;
+  else if(section==="task") mgmtKidTask=kid;
+  else if(section==="reward") mgmtKidReward=kid;
+  renderMgmtToggles();
+  renderCustomTaskList();
+  renderCustomRewardList();
+}
+
+// --- Direct Add Time / Money ---
+
+function directAddMinutes() {
+  const input = document.getElementById("direct-minutes");
+  const mins = parseInt(input.value);
+  if(!mins || mins < 1) return;
+  const k = kidData[mgmtKidDirect];
+  k.totalMinutes += mins;
+  // Log it
+  const key = todayKey();
+  if(!k.dailyLog) k.dailyLog = {};
+  if(!k.dailyLog[key]) k.dailyLog[key] = [];
+  k.dailyLog[key].push({ id:"dad-bonus-"+Date.now(), label:"Bonus from Dad: +"+mins+"m", minutes:mins, category:"bonus", timestamp: new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}) });
+  saveKid(mgmtKidDirect);
+  input.value = "";
+}
+
+function directAddMoney() {
+  const input = document.getElementById("direct-dollars");
+  const amount = parseFloat(input.value);
+  if(!amount || amount < 0.25) return;
+  const k = kidData[mgmtKidDirect];
+  if(!k.bankBalance) k.bankBalance = 0;
+  k.bankBalance += amount;
+  k.bankBalance = Math.round(k.bankBalance * 100) / 100;
+  if(!k.bankHistory) k.bankHistory = [];
+  k.bankHistory.unshift({ amount:amount, date:todayKey(), label:"$"+amount.toFixed(2)+" added by Dad", id:Date.now() });
+  saveKid(mgmtKidDirect);
+  input.value = "";
+}
+
+// --- Custom Tasks ---
+
+function addCustomTask() {
+  const nameEl = document.getElementById("custom-task-name");
+  const minsEl = document.getElementById("custom-task-mins");
+  const catEl = document.getElementById("custom-task-cat");
+  const name = nameEl.value.trim();
+  const mins = parseInt(minsEl.value);
+  const cat = catEl.value;
+  if(!name || !mins || mins < 1) return;
+  const k = kidData[mgmtKidTask];
+  if(!k.customTasks) k.customTasks = [];
+  k.customTasks.push({ id:"custom-"+Date.now(), label:name, minutes:mins, category:cat });
+  saveKid(mgmtKidTask);
+  nameEl.value = ""; minsEl.value = "";
+  renderCustomTaskList();
+}
+
+function removeCustomTask(kid, taskId) {
+  const k = kidData[kid];
+  if(!k.customTasks) return;
+  k.customTasks = k.customTasks.filter(t => t.id !== taskId);
+  saveKid(kid);
+  renderCustomTaskList();
+}
+
+function renderCustomTaskList() {
+  const el = document.getElementById("custom-task-list");
+  if(!el) return;
+  const k = kidData[mgmtKidTask];
+  const tasks = k.customTasks || [];
+  if(tasks.length === 0) {
+    el.innerHTML = '<p style="opacity:0.4;font-size:13px;padding:8px 0">No custom tasks yet for '+KIDS_META[mgmtKidTask].name+'</p>';
+    return;
+  }
+  el.innerHTML = tasks.map(t => {
+    const cat = CATEGORIES[t.category];
+    return '<div class="custom-item"><span class="ci-info">'+(cat?cat.emoji:"•")+' '+t.label+'</span><span class="ci-mins">+'+t.minutes+'m</span><button class="ci-del" onclick="removeCustomTask(\''+mgmtKidTask+'\',\''+t.id+'\')">✕</button></div>';
+  }).join("");
+}
+
+// --- Custom Rewards ---
+
+function addCustomReward() {
+  const nameEl = document.getElementById("custom-reward-name");
+  const minsEl = document.getElementById("custom-reward-mins");
+  const name = nameEl.value.trim();
+  const mins = parseInt(minsEl.value);
+  if(!name || !mins || mins < 5) return;
+  const k = kidData[mgmtKidReward];
+  if(!k.customRewards) k.customRewards = [];
+  k.customRewards.push({ id:"creward-"+Date.now(), label:name, minutes:mins, emoji:"🎁" });
+  saveKid(mgmtKidReward);
+  nameEl.value = ""; minsEl.value = "";
+  renderCustomRewardList();
+}
+
+function removeCustomReward(kid, rewardId) {
+  const k = kidData[kid];
+  if(!k.customRewards) return;
+  k.customRewards = k.customRewards.filter(r => r.id !== rewardId);
+  saveKid(kid);
+  renderCustomRewardList();
+}
+
+function renderCustomRewardList() {
+  const el = document.getElementById("custom-reward-list");
+  if(!el) return;
+  const k = kidData[mgmtKidReward];
+  const rewards = k.customRewards || [];
+  if(rewards.length === 0) {
+    el.innerHTML = '<p style="opacity:0.4;font-size:13px;padding:8px 0">No custom rewards yet for '+KIDS_META[mgmtKidReward].name+'</p>';
+    return;
+  }
+  el.innerHTML = rewards.map(r => {
+    return '<div class="custom-item"><span class="ci-info">'+(r.emoji||"🎁")+' '+r.label+'</span><span class="ci-mins">'+fmtMin(r.minutes)+'</span><button class="ci-del" onclick="removeCustomReward(\''+mgmtKidReward+'\',\''+r.id+'\')">✕</button></div>';
+  }).join("");
 }
 
 // ===== INIT =====
@@ -921,6 +1257,22 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("screen-loading").classList.add("hidden");
     document.getElementById("screen-profiles").classList.remove("hidden");
   }
+});
+
+// Global error handler — shows errors on screen for debugging
+window.onerror = function(msg, url, line, col, error) {
+  console.error("Error:", msg, "at line", line);
+  // Show profile screen if we're stuck on loading
+  const loading = document.getElementById("screen-loading");
+  if (loading && !loading.classList.contains("hidden")) {
+    loading.classList.add("hidden");
+    document.getElementById("screen-profiles").classList.remove("hidden");
+  }
+  return false;
+};
+
+window.addEventListener("unhandledrejection", function(e) {
+  console.error("Unhandled promise rejection:", e.reason);
 });
 
 // Offline detection
