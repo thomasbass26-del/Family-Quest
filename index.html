@@ -237,6 +237,7 @@
   }
   .add-btn.green { background: linear-gradient(135deg, #27AE60, #2ECC71); }
   .add-btn.blue { background: linear-gradient(135deg, #2D9CDB, #2980B9); }
+  .add-btn.red { background: linear-gradient(135deg, #E74C3C, #C0392B); }
   .custom-item {
     display: flex; align-items: center; justify-content: space-between;
     background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
@@ -432,17 +433,21 @@
         <div id="parent-summaries"></div>
       </div>
 
-      <!-- Direct Add Time / Money -->
+      <!-- Direct Add / Subtract Time & Money -->
       <div class="parent-section">
-        <h3>➕ Add Time or Money</h3>
+        <h3>➕ Add or Remove Time & Money</h3>
         <div class="mgmt-kid-toggle" id="direct-kid-toggle"></div>
+        <div class="mgmt-label">Screen Time</div>
         <div class="quick-add-row">
           <input type="number" class="add-input small" id="direct-minutes" placeholder="Min" min="1">
-          <button class="add-btn green" onclick="directAddMinutes()">+ Add Screen Time</button>
+          <button class="add-btn green" onclick="directAddMinutes()">+ Add</button>
+          <button class="add-btn red" onclick="directSubtractMinutes()">− Remove</button>
         </div>
+        <div class="mgmt-label">Bank</div>
         <div class="quick-add-row">
           <input type="number" class="add-input small" id="direct-dollars" placeholder="$" min="0.25" step="0.25">
-          <button class="add-btn green" onclick="directAddMoney()">+ Add to Bank</button>
+          <button class="add-btn green" onclick="directAddMoney()">+ Add</button>
+          <button class="add-btn red" onclick="directSubtractMoney()">− Remove</button>
         </div>
       </div>
 
@@ -923,7 +928,11 @@ function openBankHistory() {
     return;
   }
   list.innerHTML = history.map(tx => {
-    return '<div class="bank-tx"><div><div>'+tx.label+'</div><div class="btx-date">'+keyToDisplay(tx.date)+'</div></div><div class="btx-amount">+$'+tx.amount.toFixed(2)+'</div></div>';
+    const isNeg = tx.amount < 0;
+    const absAmt = Math.abs(tx.amount).toFixed(2);
+    const color = isNeg ? "#E74C3C" : "#2ECC71";
+    const sign = isNeg ? "-" : "+";
+    return '<div class="bank-tx"><div><div>'+tx.label+'</div><div class="btx-date">'+keyToDisplay(tx.date)+'</div></div><div class="btx-amount" style="color:'+color+'">'+sign+'$'+absAmt+'</div></div>';
   }).join("");
 }
 
@@ -1165,6 +1174,38 @@ function directAddMoney() {
   k.bankBalance = Math.round(k.bankBalance * 100) / 100;
   if(!k.bankHistory) k.bankHistory = [];
   k.bankHistory.unshift({ amount:amount, date:todayKey(), label:"$"+amount.toFixed(2)+" added by Dad", id:Date.now() });
+  saveKid(mgmtKidDirect);
+  input.value = "";
+}
+
+function directSubtractMinutes() {
+  const input = document.getElementById("direct-minutes");
+  const mins = parseInt(input.value);
+  if(!mins || mins < 1) return;
+  const k = kidData[mgmtKidDirect];
+  const actual = Math.min(mins, k.totalMinutes || 0);
+  if(actual <= 0) return;
+  k.totalMinutes -= actual;
+  const key = todayKey();
+  if(!k.dailyLog) k.dailyLog = {};
+  if(!k.dailyLog[key]) k.dailyLog[key] = [];
+  k.dailyLog[key].push({ id:"dad-deduct-"+Date.now(), label:"Removed by Dad: -"+actual+"m", minutes: -actual, category:"bonus", timestamp: new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}) });
+  saveKid(mgmtKidDirect);
+  input.value = "";
+}
+
+function directSubtractMoney() {
+  const input = document.getElementById("direct-dollars");
+  const amount = parseFloat(input.value);
+  if(!amount || amount < 0.25) return;
+  const k = kidData[mgmtKidDirect];
+  if(!k.bankBalance) k.bankBalance = 0;
+  const actual = Math.min(amount, k.bankBalance);
+  if(actual <= 0) return;
+  k.bankBalance -= actual;
+  k.bankBalance = Math.round(k.bankBalance * 100) / 100;
+  if(!k.bankHistory) k.bankHistory = [];
+  k.bankHistory.unshift({ amount: -actual, date:todayKey(), label:"$"+actual.toFixed(2)+" removed by Dad", id:Date.now() });
   saveKid(mgmtKidDirect);
   input.value = "";
 }
