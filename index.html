@@ -1225,6 +1225,7 @@ async function checkKidToken() {
         document.getElementById("screen-auth").classList.add("hidden");
         document.getElementById("screen-loading").classList.remove("hidden");
         startListening(kid);
+        window.history.replaceState({}, "", window.location.pathname);
         return true;
       }
     } else {
@@ -1239,6 +1240,7 @@ async function checkKidToken() {
           document.getElementById("screen-auth").classList.add("hidden");
           document.getElementById("screen-loading").classList.remove("hidden");
           startListening(kid);
+          window.history.replaceState({}, "", window.location.pathname);
           return true;
         }
       }
