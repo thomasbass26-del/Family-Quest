@@ -1198,7 +1198,20 @@ async function checkKidToken() {
   var kid = params.get("kid");
   var token = params.get("token");
   var fid = params.get("fid");
-  if (!kid || !token) return false;
+
+  // If no URL params, check for a saved kid session
+  if (!kid || !token) {
+    try {
+      var saved = JSON.parse(localStorage.getItem("fq_kid_session"));
+      if (saved && saved.kid && saved.token && saved.fid) {
+        kid = saved.kid;
+        token = saved.token;
+        fid = saved.fid;
+      } else {
+        return false;
+      }
+    } catch(e) { return false; }
+  }
 
   try {
     if (fid) {
@@ -1207,6 +1220,8 @@ async function checkKidToken() {
       if (tsnap.exists && tsnap.data().token === token) {
         familyId = fid;
         currentUser = { uid: "kid-" + kid, isKid: true };
+        // Save session for refresh persistence
+        localStorage.setItem("fq_kid_session", JSON.stringify({ kid: kid, token: token, fid: fid }));
         document.getElementById("screen-auth").classList.add("hidden");
         document.getElementById("screen-loading").classList.remove("hidden");
         startListening(kid);
@@ -1221,6 +1236,7 @@ async function checkKidToken() {
         if (tsnap.exists && tsnap.data().token === token) {
           familyId = fdoc.id;
           currentUser = { uid: "kid-" + kid, isKid: true };
+          localStorage.setItem("fq_kid_session", JSON.stringify({ kid: kid, token: token, fid: fdoc.id }));
           document.getElementById("screen-auth").classList.add("hidden");
           document.getElementById("screen-loading").classList.remove("hidden");
           startListening(kid);
@@ -1232,7 +1248,8 @@ async function checkKidToken() {
   } catch(e) {
     console.error("Token check error:", e);
   }
-  // If token check failed, show a message instead of just returning to login
+  // Token invalid — clear any saved session
+  localStorage.removeItem("fq_kid_session");
   if (kid && token) {
     document.getElementById("screen-loading").classList.add("hidden");
     document.getElementById("screen-auth").classList.remove("hidden");
@@ -1660,6 +1677,7 @@ function logout() {
 
 function signOut() {
   unsubscribers.forEach(fn => fn()); unsubscribers = [];
+  localStorage.removeItem("fq_kid_session");
   currentUser = null; familyId = null; currentProfile = null;
   firebase.auth().signOut();
   document.getElementById("screen-app").classList.add("hidden");
