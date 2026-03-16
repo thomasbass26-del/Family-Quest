@@ -1154,7 +1154,7 @@ function renderKidLinks() {
     el.innerHTML = results.map(function(r) {
       var meta = KIDS_META[r.kid];
       var url = r.token
-        ? window.location.origin + "?kid=" + r.kid + "&token=" + r.token + "&fid=" + familyId
+        ? window.location.origin + window.location.pathname + "?kid=" + r.kid + "&token=" + r.token + "&fid=" + familyId
         : null;
       return '<div class="kid-link-box">'
         + '<h4>' + meta.emoji + ' ' + meta.name + '</h4>'
