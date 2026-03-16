@@ -1022,15 +1022,18 @@ function startListening(autoKid) {
   unsubscribers.forEach(fn => fn());
   unsubscribers = [];
 
-  // Ensure docs exist
-  ["cooper","haylee"].forEach(function(kid) {
-    familyCol("kids").doc(kid).get().then(function(snap) {
-      if (!snap.exists) familyCol("kids").doc(kid).set(defaultKidDoc());
+  // Ensure docs exist (skip for unauthenticated kid sessions)
+  var isKidSession = currentUser && currentUser.isKid;
+  if (!isKidSession) {
+    ["cooper","haylee"].forEach(function(kid) {
+      familyCol("kids").doc(kid).get().then(function(snap) {
+        if (!snap.exists) familyCol("kids").doc(kid).set(defaultKidDoc());
+      }).catch(()=>{});
+    });
+    familyCol("config").doc("settings").get().then(function(snap) {
+      if (!snap.exists) familyCol("config").doc("settings").set({ parentPin: null });
     }).catch(()=>{});
-  });
-  familyCol("config").doc("settings").get().then(function(snap) {
-    if (!snap.exists) familyCol("config").doc("settings").set({ parentPin: null });
-  }).catch(()=>{});
+  }
 
   function hydrateKid(snap, kid) {
     var d = snap.exists ? snap.data() : defaultKidDoc();
@@ -1151,7 +1154,7 @@ function renderKidLinks() {
     el.innerHTML = results.map(function(r) {
       var meta = KIDS_META[r.kid];
       var url = r.token
-        ? window.location.origin + "?kid=" + r.kid + "&token=" + r.token
+        ? window.location.origin + "?kid=" + r.kid + "&token=" + r.token + "&fid=" + familyId
         : null;
       return '<div class="kid-link-box">'
         + '<h4>' + meta.emoji + ' ' + meta.name + '</h4>'
@@ -1163,6 +1166,15 @@ function renderKidLinks() {
             + '</div>'
           : '<button class="kid-link-btn" onclick="regenKidToken(\'' + r.kid + '\')">Generate Link</button>'
         )
+        + '</div>';
+    }).join('');
+  }).catch(function(err) {
+    console.error("Kid links load error:", err);
+    el.innerHTML = ["cooper","haylee"].map(function(kid) {
+      var meta = KIDS_META[kid];
+      return '<div class="kid-link-box">'
+        + '<h4>' + meta.emoji + ' ' + meta.name + '</h4>'
+        + '<button class="kid-link-btn" onclick="regenKidToken(\'' + kid + '\')">Generate Link</button>'
         + '</div>';
     }).join('');
   });
@@ -1185,27 +1197,46 @@ async function checkKidToken() {
   var params = new URLSearchParams(window.location.search);
   var kid = params.get("kid");
   var token = params.get("token");
+  var fid = params.get("fid");
   if (!kid || !token) return false;
 
   try {
-    // Find the family that owns this token
-    var snap = await db.collection("families").get();
-    for (var fdoc of snap.docs) {
-      var tsnap = await fdoc.ref.collection("kidTokens").doc(kid).get();
+    if (fid) {
+      // Direct lookup using familyId from URL
+      var tsnap = await db.collection("families").doc(fid).collection("kidTokens").doc(kid).get();
       if (tsnap.exists && tsnap.data().token === token) {
-        familyId = fdoc.id;
+        familyId = fid;
         currentUser = { uid: "kid-" + kid, isKid: true };
-        // Hide auth, go straight to kid profile
         document.getElementById("screen-auth").classList.add("hidden");
         document.getElementById("screen-loading").classList.remove("hidden");
         startListening(kid);
-        // Clean URL
         window.history.replaceState({}, "", window.location.pathname);
         return true;
+      }
+    } else {
+      // Legacy fallback for old links without fid — try scanning (requires auth)
+      var snap = await db.collection("families").get();
+      for (var fdoc of snap.docs) {
+        var tsnap = await fdoc.ref.collection("kidTokens").doc(kid).get();
+        if (tsnap.exists && tsnap.data().token === token) {
+          familyId = fdoc.id;
+          currentUser = { uid: "kid-" + kid, isKid: true };
+          document.getElementById("screen-auth").classList.add("hidden");
+          document.getElementById("screen-loading").classList.remove("hidden");
+          startListening(kid);
+          window.history.replaceState({}, "", window.location.pathname);
+          return true;
+        }
       }
     }
   } catch(e) {
     console.error("Token check error:", e);
+  }
+  // If token check failed, show a message instead of just returning to login
+  if (kid && token) {
+    document.getElementById("screen-loading").classList.add("hidden");
+    document.getElementById("screen-auth").classList.remove("hidden");
+    console.warn("Kid link expired or invalid — kid:", kid);
   }
   return false;
 }
